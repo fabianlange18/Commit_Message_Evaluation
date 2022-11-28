@@ -9,24 +9,23 @@ import pandas as pd
 
 from features import build_featureset
 
-train_data = pd.read_pickle('data/04a_Train_Set.pkl')
-test_data = pd.read_pickle('data/04c_Test_Set.pkl')
+train_data = pd.read_pickle('data/05a_Authors_Train_Set.pkl')
+test_data = pd.read_pickle('data/05c_Authors_Test_Set.pkl')
 
-subset_size = 10
+subset_size = 10000
 batch_size = 1
 
 train_feature_sets = build_featureset(train_data[:subset_size])
 test_feature_sets = build_featureset(test_data[:subset_size])
 
-train_data_tensors = torch.tensor(train_feature_sets)
-test_data_tensors = torch.tensor(test_feature_sets)
+train_data_tensors = torch.tensor(train_feature_sets, dtype=torch.float32)
+test_data_tensors = torch.tensor(test_feature_sets, dtype=torch.float32)
 
-### Labels need to be included here to make the model work
-train_dataloader = DataLoader(train_data_tensors, batch_size)
-test_dataloader = DataLoader(test_data_tensors, batch_size)
+train_tensors_labeled = [[tensor, int(train_data['label'][i])] for i, tensor in enumerate(train_data_tensors)]
+test_tensors_labeled = [[tensor, int(test_data['label'][i])] for i, tensor in enumerate(test_data_tensors)]
 
-for X in train_dataloader:
-    print(X.shape)
+train_dataloader = DataLoader(train_tensors_labeled, batch_size)
+test_dataloader = DataLoader(test_tensors_labeled, batch_size)
 
 
 # Get cpu or gpu device for training.
@@ -37,16 +36,12 @@ print(f"Using {device} device")
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(25, 1),
-            nn.ReLU()
-        )
+        self.conv = nn.Linear(25, 42)
 
     def forward(self, x):
-        x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
+        logits = self.conv(x)
+        m = nn.Softmax(1)
+        return m(logits)
 
 model = NeuralNetwork().to(device)
 print(model)
