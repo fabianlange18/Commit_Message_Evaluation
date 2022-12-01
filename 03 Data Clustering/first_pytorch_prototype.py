@@ -3,23 +3,20 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
 
 import pandas as pd
-
-from features import build_featureset
+import numpy as np
 
 train_data = pd.read_pickle('data/05a_Authors_Train_Set.pkl')
 test_data = pd.read_pickle('data/05c_Authors_Test_Set.pkl')
 
-subset_size = 10000
-batch_size = 1
+batch_size = 64
 
-train_feature_sets = build_featureset(train_data[:subset_size])
-test_feature_sets = build_featureset(test_data[:subset_size])
+train_featureset = np.load('/Users/fabian/Developer/HPI/02 Trends AI:DL/data/05a_Train_Set_Features.npy', allow_pickle=True)
+test_featureset = np.load('/Users/fabian/Developer/HPI/02 Trends AI:DL/data/05c_Test_Set_Features.npy', allow_pickle=True)
 
-train_data_tensors = torch.tensor(train_feature_sets, dtype=torch.float32)
-test_data_tensors = torch.tensor(test_feature_sets, dtype=torch.float32)
+train_data_tensors = torch.tensor(train_featureset, dtype=torch.float32)
+test_data_tensors = torch.tensor(test_featureset, dtype=torch.float32)
 
 train_tensors_labeled = [[tensor, int(train_data['label'][i])] for i, tensor in enumerate(train_data_tensors)]
 test_tensors_labeled = [[tensor, int(test_data['label'][i])] for i, tensor in enumerate(test_data_tensors)]
@@ -36,18 +33,26 @@ print(f"Using {device} device")
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv = nn.Linear(25, 42)
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(25, 100),
+            nn.ReLU(),
+            nn.Linear(100, 100),
+            nn.ReLU(),
+            nn.Linear(100, 42),
+            nn.ReLU()
+        )
+        self.softmax = nn.Softmax(1)
 
     def forward(self, x):
-        logits = self.conv(x)
-        m = nn.Softmax(1)
-        return m(logits)
+        prediction = self.linear_relu_stack(x)
+        class_prediction = self.softmax(prediction)
+        return class_prediction
 
 model = NeuralNetwork().to(device)
 print(model)
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-1)
 
 def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
@@ -86,7 +91,7 @@ def test(dataloader, model, loss_fn):
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 
-epochs = 5
+epochs = 100
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, loss_fn, optimizer)

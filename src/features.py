@@ -9,12 +9,12 @@ nlp = spacy.load("en_core_web_sm")
 nlp.add_pipe('spacytextblob')
 
 import numpy as np
+import pickle as pkl
 
 
-def build_featureset(data, normalize = True):
+def build_featureset(data, subset_size = 10000, normalize = True, output_path = None):
 
     feature_set = []
-    subset_size = 100000
 
     for message in data['message'][:subset_size]:
         
@@ -62,5 +62,8 @@ def build_featureset(data, normalize = True):
         
     if normalize:
         feature_set = feature_set / np.linalg.norm(feature_set)
+
+    if output_path:
+        np.save(output_path, feature_set)
 
     return feature_set
