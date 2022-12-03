@@ -1,0 +1,14 @@
+pandas
+numpy
+collections
+datasets
+transformers
+evaluate
+nltk
+matplotlib
+spacy
+spacytextblob
+bertopic
+sklearn
+xgboost
+torch

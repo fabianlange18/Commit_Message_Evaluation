@@ -1,2 +1,7 @@
 data/*
 .DS_Store
+
+venv/
+
+test_trainer/
+test_trainer_small/
