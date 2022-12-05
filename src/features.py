@@ -12,7 +12,7 @@ import numpy as np
 import pickle as pkl
 
 
-def build_featureset(data, subset_size = 10000, normalize = True, output_path = None):
+def build_featureset(data, subset_size = 100000, normalize = True, output_path = None):
 
     feature_set = []
 

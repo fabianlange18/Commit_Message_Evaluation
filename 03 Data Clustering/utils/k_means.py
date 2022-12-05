@@ -39,7 +39,7 @@ def k_means_summary(predictions, n_clusters, data):
 
 
 
-def print_k_means_classes(predictions, n_clusters, data):
+def print_k_means_classes(predictions, n_clusters, data, message_details=False):
     for label in range(n_clusters):
         print("\n________________ Class " + str(label) + " ________________\n")
         class_counter = 1
@@ -55,10 +55,12 @@ def print_k_means_classes(predictions, n_clusters, data):
                 if print_examples:
                     print("___")
                     print(str(class_counter) + ") ")
-                    print(message + "\n")
-                    print("- - - ")
-                    print("Committer: " + str(data["author_email"][i]))
-                    print("Project:   " + str(data["project"][i]))
+                    print(message)
+                    if message_details:
+                        print()
+                        print("- - - ")
+                        print("Committer: " + str(data["author_email"][i]))
+                        print("Project:   " + str(data["project"][i]))
                 class_counter += 1
         print("_________________")
         print()
