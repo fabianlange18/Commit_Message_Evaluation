@@ -12,3 +12,5 @@ bertopic
 sklearn
 xgboost
 torch
+pytorch_metric_learning
+sentence_transformers

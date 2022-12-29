@@ -12,8 +12,8 @@ test_data = pd.read_pickle('data/05c_Authors_Test_Set.pkl')
 
 batch_size = 64
 
-train_featureset = np.load('/Users/fabian/Developer/HPI/02 Trends AI:DL/data/05a_Train_Set_Features.npy', allow_pickle=True)
-test_featureset = np.load('/Users/fabian/Developer/HPI/02 Trends AI:DL/data/05c_Test_Set_Features.npy', allow_pickle=True)
+train_featureset = np.load('./data/05a_Train_Set_Features.npy', allow_pickle=True)
+test_featureset = np.load('./data/05c_Test_Set_Features.npy', allow_pickle=True)
 
 train_data_tensors = torch.tensor(train_featureset, dtype=torch.float32)
 test_data_tensors = torch.tensor(test_featureset, dtype=torch.float32)
