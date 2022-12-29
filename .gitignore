@@ -2,6 +2,6 @@ data/*
 .DS_Store
 
 venv/
-
+wandb/
 test_trainer/
 test_trainer_small/
