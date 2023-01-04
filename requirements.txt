@@ -1,6 +1,5 @@
 pandas
 numpy
-collections
 datasets
 transformers
 evaluate
@@ -14,3 +13,4 @@ xgboost
 torch
 pytorch_metric_learning
 sentence_transformers
+wandb
