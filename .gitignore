@@ -7,3 +7,5 @@ test_trainer/
 test_trainer_small/
 
 lightning_logs/
+
+__pycache__

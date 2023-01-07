@@ -11,12 +11,6 @@ MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
 from transformers import AutoTokenizer, AutoModel
 
-train_data = pd.read_pickle('data/04a_Train_Set.pkl')
-validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
-test_data = pd.read_pickle('data/04c_Test_Set.pkl')
-
-batch_size = 64
-
 ######### Helper functions #########
 
 # Tokenization
@@ -34,8 +28,13 @@ def mean_pooling(model_output, attention_mask):
 
 ######### End Helper functions #########
 
-
 # Build dataloader with pairs
+batch_size = 64
+
+train_data = pd.read_pickle('data/04a_Train_Set.pkl')
+validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
+test_data = pd.read_pickle('data/04c_Test_Set.pkl')
+
 training_pairs = []
 testing_pairs = []
 
@@ -54,7 +53,6 @@ for i, group in enumerate(test_data.groupby("author_email")):
         if i % 2 == 1:
             testing_pairs.append(pair)
             pair = []
-
 
 train_dataloader = DataLoader(training_pairs, batch_size)
 test_dataloader = DataLoader(testing_pairs, batch_size)
@@ -101,7 +99,6 @@ def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     model.train()
     for batch, (X1, X2) in enumerate(dataloader):
-        X1, X2 = X1.to(device), X2.to(device)
 
         # Compute prediction error
         X1_s = model(X1)

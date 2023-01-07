@@ -2,6 +2,7 @@
 # https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 
 import pandas as pd
+import pickle
 
 import torch
 from torch import nn
@@ -13,13 +14,9 @@ MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
 from transformers import AutoTokenizer, AutoModel
 
-train_data = pd.read_pickle('data/04a_Train_Set.pkl')
-validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
-test_data = pd.read_pickle('data/04c_Test_Set.pkl')
 
-
-import wandb
-wandb.init(project="contrastive_model", entity="commit_message_evaluation")
+#import wandb
+#wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 
 batch_size = 64
 
@@ -41,31 +38,31 @@ def mean_pooling(model_output, attention_mask):
 ######### End Helper functions #########
 
 
-# Build dataloader with pairs
-training_pairs = []
-testing_pairs = []
+# Build dataloader with saved files
 
-for i, group in enumerate(train_data.groupby("author_email")):
-    pair = []
-    for i, message in enumerate(group[1]['message']):
-        pair.append(message)
-        if i % 2 == 1:
-            training_pairs.append(pair)
-            pair = []
+# Pickle really slow
 
-for i, group in enumerate(test_data.groupby("author_email")):
-    pair = []
-    for i, message in enumerate(group[1]['message']):
-        pair.append(message)
-        if i % 2 == 1:
-            testing_pairs.append(pair)
-            pair = []
+# with open('data/06a_Contrastive_Train_Pairs.pkl', 'rb') as f:
+#     training_pairs = pickle.load(f)
+# with open('data/06b_Contrastive_Validate_Pairs.pkl', 'rb') as f:
+#    validate_pairs = pickle.load(f)
+# with open('data/06c_Contrastive_Test_Pairs.pkl', 'rb') as f:
+#     testing_pairs = pickle.load(f)
 
-train_dataloader = DataLoader(training_pairs, batch_size, drop_last=True)
-test_dataloader = DataLoader(testing_pairs, batch_size, drop_last=True)
+import sys
+sys.path.append('.')
+from src.contrastive_pairs import build_contrastive_pairs
+
+training_pairs = build_contrastive_pairs('data/04a_Train_Set.pkl', 369)
+testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
+
+print(training_pairs)
+
+train_dataloader = DataLoader(training_pairs, batch_size, drop_last=True) #, num_workers=8
+test_dataloader = DataLoader(testing_pairs, batch_size, drop_last=True) #, num_workers=8
 
 # Define SBert Model
-# This stays a torch module intentionally to only call it by the bigger pytorch module
+# This stays a torch module intentionally to only call it by the bigger pytorch_lightning module
 class SBERT(nn.Module):
     def __init__(self):
         super().__init__()
@@ -102,32 +99,28 @@ class LightningModel(L.LightningModule):
         return optimizer
 
     def training_step(self, train_batch, batch_idx):
-        X1, X2 = train_batch
+        X1, X2, target = train_batch
 
         # Compute prediction error
         X1_s = self(X1)
         X2_s = self(X2)
 
-        # Introduce target (labels) to prepare for loss: simple case of only positive pairs -> always 1
-        target = torch.full((X1_s.shape[0],), 1)
-
         # Compute Loss
         loss = loss_fn(X1_s, X2_s, target)
         
         # Log Loss to WandB
-        wandb.log({"train_loss": loss})
+#        wandb.log({"train_loss": loss})
 
         self.log('train_loss', loss)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
-        X1, X2 = val_batch
+        X1, X2, target = val_batch
         X1_s = self(X1)
         X2_s = self(X2)
-        target = torch.full((X1_s.shape[0],), 1)
         loss = loss_fn(X1_s, X2_s, target)
         # Log Loss to WandB
-        wandb.log({"val_loss": loss})
+#        wandb.log({"val_loss": loss})
         self.log('val_loss', loss, batch_size=batch_size)
 
     # If uncommented, this causes an error, if not, everything runs.
@@ -137,6 +130,6 @@ class LightningModel(L.LightningModule):
 
 
 lightning_model = LightningModel()
-wandb.watch(lightning_model)
-trainer = L.Trainer()
+#wandb.watch(lightning_model)
+trainer = L.Trainer(max_epochs=1) #accelerator='gpu', devices=1, #accelerator="mps", devices=1, 
 trainer.fit(lightning_model, train_dataloader, test_dataloader)
