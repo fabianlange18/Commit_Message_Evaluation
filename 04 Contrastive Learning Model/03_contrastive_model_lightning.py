@@ -15,10 +15,10 @@ MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 from transformers import AutoTokenizer, AutoModel
 
 
-#import wandb
-#wandb.init(project="contrastive_model", entity="commit_message_evaluation")
+import wandb
+wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 
-batch_size = 64
+batch_size = 1024
 
 
 ######### Helper functions #########
@@ -27,7 +27,7 @@ batch_size = 64
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
 def tokenize_function(examples):
-    return tokenizer(examples, padding=True, truncation=True, return_tensors='pt')
+    return tokenizer(examples, padding=True, truncation=True, return_tensors='pt', max_length=25)
 
 # Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
@@ -49,6 +49,8 @@ def mean_pooling(model_output, attention_mask):
 # with open('data/06c_Contrastive_Test_Pairs.pkl', 'rb') as f:
 #     testing_pairs = pickle.load(f)
 
+# Build Pairs by the function here
+
 import sys
 sys.path.append('.')
 from src.contrastive_pairs import build_contrastive_pairs
@@ -56,20 +58,49 @@ from src.contrastive_pairs import build_contrastive_pairs
 training_pairs = build_contrastive_pairs('data/04a_Train_Set.pkl', 369)
 testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
 
-print(training_pairs)
+# Testing training pairs
 
-train_dataloader = DataLoader(training_pairs, batch_size, drop_last=True) #, num_workers=8
-test_dataloader = DataLoader(testing_pairs, batch_size, drop_last=True) #, num_workers=8
+# train_data = pd.read_pickle('data/04a_Train_Set.pkl')
+# validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
+# test_data = pd.read_pickle('data/04c_Test_Set.pkl')
+
+# training_pairs = []
+# testing_pairs = []
+
+# for i, group in enumerate(train_data.groupby("author_email")):
+#     pair = []
+#     for i, message in enumerate(group[1]['message']):
+#         pair.append(message)
+#         if i % 2 == 1:
+#             pair.append(1)
+#             training_pairs.append(pair)
+#             pair = []
+
+# for i, group in enumerate(test_data.groupby("author_email")):
+#     pair = []
+#     for i, message in enumerate(group[1]['message']):
+#         pair.append(message)
+#         if i % 2 == 1:
+#             pair.append(1)
+#             testing_pairs.append(pair)
+#             pair = []
+
+train_dataloader = DataLoader(training_pairs, batch_size, shuffle=True, drop_last=True, num_workers=48)
+test_dataloader = DataLoader(testing_pairs, batch_size, shuffle=True, drop_last=True, num_workers=48)
 
 # Define SBert Model
 # This stays a torch module intentionally to only call it by the bigger pytorch_lightning module
-class SBERT(nn.Module):
+class SBERT(L.LightningModule):
     def __init__(self):
         super().__init__()
         self.sbert = AutoModel.from_pretrained(MODEL)
 
     def forward(self, sentence):
         encoding = tokenize_function(sentence)
+        encoding['attention_mask'] = encoding['attention_mask'].to(self.device)
+        encoding['input_ids'] = encoding['input_ids'].to(self.device)
+        encoding['token_type_ids'] = encoding['token_type_ids'].to(self.device)
+
         embeddings = self.sbert(**encoding)
         # Perform pooling
         sentence_embeddings = mean_pooling(embeddings, encoding['attention_mask'])
@@ -80,7 +111,7 @@ class SBERT(nn.Module):
 
 loss_fn = nn.CosineEmbeddingLoss()
 
-class LightningModel(L.LightningModule):
+class StyleModel(L.LightningModule):
     def __init__(self) -> None:
         super().__init__()
         self.sbert_m_s = SBERT()
@@ -109,7 +140,7 @@ class LightningModel(L.LightningModule):
         loss = loss_fn(X1_s, X2_s, target)
         
         # Log Loss to WandB
-#        wandb.log({"train_loss": loss})
+        wandb.log({"train_loss": loss})
 
         self.log('train_loss', loss)
         return loss
@@ -120,16 +151,11 @@ class LightningModel(L.LightningModule):
         X2_s = self(X2)
         loss = loss_fn(X1_s, X2_s, target)
         # Log Loss to WandB
-#        wandb.log({"val_loss": loss})
+        wandb.log({"val_loss": loss})
         self.log('val_loss', loss, batch_size=batch_size)
 
-    # If uncommented, this causes an error, if not, everything runs.
-    # Is this required?
-    # def backward(self, trainer, loss, optimizer, optimizer_idx):
-    #    loss.backward()
 
-
-lightning_model = LightningModel()
-#wandb.watch(lightning_model)
-trainer = L.Trainer(max_epochs=1) #accelerator='gpu', devices=1, #accelerator="mps", devices=1, 
+lightning_model = StyleModel()
+wandb.watch(lightning_model)
+trainer = L.Trainer(accelerator='gpu', devices=1,max_epochs=1, precision=16) #accelerator='gpu', devices=1, #accelerator="mps", devices=1, 
 trainer.fit(lightning_model, train_dataloader, test_dataloader)
