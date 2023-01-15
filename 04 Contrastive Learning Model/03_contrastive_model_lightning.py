@@ -18,7 +18,7 @@ from transformers import AutoTokenizer, AutoModel
 import wandb
 wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 
-batch_size = 1024
+batch_size = 8192
 
 
 ######### Helper functions #########
@@ -27,7 +27,7 @@ batch_size = 1024
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
 def tokenize_function(examples):
-    return tokenizer(examples, padding=True, truncation=True, return_tensors='pt', max_length=25)
+    return tokenizer(examples, padding=True, truncation=True, return_tensors='pt', max_length=15)
 
 # Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
@@ -85,6 +85,10 @@ testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
 #             testing_pairs.append(pair)
 #             pair = []
 
+
+# training_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in training_pairs]
+# testing_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in testing_pairs]
+
 train_dataloader = DataLoader(training_pairs, batch_size, shuffle=True, drop_last=True, num_workers=48)
 test_dataloader = DataLoader(testing_pairs, batch_size, shuffle=True, drop_last=True, num_workers=48)
 
@@ -95,7 +99,7 @@ class SBERT(L.LightningModule):
         super().__init__()
         self.sbert = AutoModel.from_pretrained(MODEL)
 
-    def forward(self, sentence):
+    def forward(self, sentence): # sentence
         encoding = tokenize_function(sentence)
         encoding['attention_mask'] = encoding['attention_mask'].to(self.device)
         encoding['input_ids'] = encoding['input_ids'].to(self.device)
@@ -157,5 +161,8 @@ class StyleModel(L.LightningModule):
 
 lightning_model = StyleModel()
 wandb.watch(lightning_model)
-trainer = L.Trainer(accelerator='gpu', devices=1,max_epochs=1, precision=16) #accelerator='gpu', devices=1, #accelerator="mps", devices=1, 
+trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=1, precision=16) #, num_nodes=2, strategy="ddp"
+# gpus=[0, 1] on server leads to:
+# lightning_lite.utilities.exceptions.MisconfigurationException: You requested gpu: [0, 1]
+# But your machine only has: [0]
 trainer.fit(lightning_model, train_dataloader, test_dataloader)
