@@ -38,7 +38,7 @@ wandb.config = {
   "epochs": 1,
   "num_workers": 8,
   "precision": 16,
-  "accelerator": 'cpu',
+  "accelerator": 'mps',
   "devices": 1
 }
 
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     wandb.watch(lightning_model)
     trainer = L.Trainer(
 
-        # Multi_GPU: num_nodes=2, strategy="ddp", or gpus=[0, 1]
+        # Multi_GPU: num_nodes=1, strategy="ddp", or gpus=[0, 1]
         # gpus=[0, 1] on server leads to:
         # lightning_lite.utilities.exceptions.MisconfigurationException: You requested gpu: [0, 1]
         # But your machine only has: [0]
@@ -195,4 +195,4 @@ if __name__ == '__main__':
         max_epochs=wandb.config['epochs'],
         precision=wandb.config['precision'])
     trainer.fit(lightning_model, train_dataloader, test_dataloader)
-    torch.save(lightning_model, './model/Style_Model.pt')
+    torch.save(lightning_model.state_dict(), './model/Style_Model.pt')

@@ -6,6 +6,8 @@ wandb/
 test_trainer/
 test_trainer_small/
 
+model/
+
 lightning_logs/
 
 __pycache__
