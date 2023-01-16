@@ -27,7 +27,8 @@ wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 #   "num_workers": 48,
 #   "precision": 16,
 #   "accelerator": 'gpu',
-#   "devices": 1
+#   "devices": 1,
+#   "subset_size": 150
 # }
 
 # CPU
@@ -39,7 +40,8 @@ wandb.config = {
   "num_workers": 8,
   "precision": 16,
   "accelerator": 'mps',
-  "devices": 1
+  "devices": 1,
+  "subset_size": 150
 }
 
 
@@ -110,8 +112,8 @@ for i, group in enumerate(test_data.groupby("author_email")):
 # training_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in training_pairs]
 # testing_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in testing_pairs]
 
-train_dataloader = DataLoader(training_pairs[:100], wandb.config['batch_size'], shuffle=True, drop_last=True, num_workers=wandb.config['num_workers'])
-test_dataloader = DataLoader(testing_pairs[:100], wandb.config['batch_size'], shuffle=False, drop_last=True, num_workers=wandb.config['num_workers'])
+train_dataloader = DataLoader(training_pairs[:wandb.config['subset_size']], wandb.config['batch_size'], shuffle=True, drop_last=True, num_workers=wandb.config['num_workers'])
+test_dataloader = DataLoader(testing_pairs[:wandb.config['subset_size']], wandb.config['batch_size'], shuffle=False, drop_last=True, num_workers=wandb.config['num_workers'])
 
 # Define SBert Model
 # This stays a torch module intentionally to only call it by the bigger pytorch_lightning module
