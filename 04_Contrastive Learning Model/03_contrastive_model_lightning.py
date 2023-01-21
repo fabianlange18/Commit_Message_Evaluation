@@ -197,4 +197,4 @@ if __name__ == '__main__':
         max_epochs=wandb.config['epochs'],
         precision=wandb.config['precision'])
     trainer.fit(lightning_model, train_dataloader, test_dataloader)
-    torch.save(lightning_model.state_dict(), '/model/Style_Model.pt')
+    torch.save(lightning_model.state_dict(), 'model/Style_Model.pt')
