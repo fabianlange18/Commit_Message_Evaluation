@@ -27,7 +27,7 @@ wandb.config = {
   "num_workers": 48,
   "precision": 16,
   "accelerator": 'gpu',
-  "devices": 2,
+  "devices": 1,
   "subset_size": 10000000
 }
 
