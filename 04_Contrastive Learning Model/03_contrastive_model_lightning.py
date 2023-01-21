@@ -19,30 +19,30 @@ import wandb
 wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 
 # Server GPU
-# wandb.config = {
-#   "batch_size": 1024,
-#   "learning_rate": 1e-3,
-#   "max_length": 20,
-#   "epochs": 1,
-#   "num_workers": 48,
-#   "precision": 16,
-#   "accelerator": 'gpu',
-#   "devices": 1,
-#   "subset_size": 150
-# }
-
-# CPU
 wandb.config = {
-  "batch_size": 64,
+  "batch_size": 1024,
   "learning_rate": 1e-3,
   "max_length": 20,
   "epochs": 1,
-  "num_workers": 8,
+  "num_workers": 48,
   "precision": 16,
-  "accelerator": 'mps',
-  "devices": 1,
+  "accelerator": 'gpu',
+  "devices": 2,
   "subset_size": 150
 }
+
+# CPU
+# wandb.config = {
+#   "batch_size": 64,
+#   "learning_rate": 1e-3,
+#   "max_length": 20,
+#   "epochs": 1,
+#   "num_workers": 8,
+#   "precision": 16,
+#   "accelerator": 'mps',
+#   "devices": 1,
+#   "subset_size": 150
+# }
 
 
 ######### Helper functions #########
