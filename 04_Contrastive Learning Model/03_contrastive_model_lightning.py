@@ -3,6 +3,7 @@
 
 import pandas as pd
 import pickle
+import random
 
 import torch
 from torch import nn
@@ -113,8 +114,8 @@ testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
 # testing_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in testing_pairs]
 
 # Do this when taking a subset to ensure that shuffling happens before taking subsets
-training_pairs.shuffle()
-testing_pairs.shuffle()
+random.shuffle(training_pairs)
+random.shuffle(testing_pairs)
 
 train_dataloader = DataLoader(training_pairs[:wandb.config['subset_size']], wandb.config['batch_size'], shuffle=True, drop_last=True, num_workers=wandb.config['num_workers'])
 test_dataloader = DataLoader(testing_pairs[:wandb.config['subset_size']], wandb.config['batch_size'], shuffle=False, drop_last=True, num_workers=wandb.config['num_workers'])
