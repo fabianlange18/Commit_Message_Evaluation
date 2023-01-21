@@ -20,10 +20,10 @@ wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 
 # Server GPU
 wandb.config = {
-  "batch_size": 1024,
+  "batch_size": 256,
   "learning_rate": 1e-3,
   "max_length": 20,
-  "epochs": 1,
+  "epochs": 3,
   "num_workers": 48,
   "precision": 16,
   "accelerator": 'gpu',
@@ -78,39 +78,43 @@ import sys
 sys.path.append('.')
 from util.contrastive_pairs import build_contrastive_pairs
 
-# training_pairs = build_contrastive_pairs('data/04a_Train_Set.pkl', 369)
-# testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
+training_pairs = build_contrastive_pairs('data/04a_Train_Set.pkl', 369)
+testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
 
 # Testing training pairs
 
-train_data = pd.read_pickle('data/04a_Train_Set.pkl')
-validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
-test_data = pd.read_pickle('data/04c_Test_Set.pkl')
+# train_data = pd.read_pickle('data/04a_Train_Set.pkl')
+# validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
+# test_data = pd.read_pickle('data/04c_Test_Set.pkl')
 
-training_pairs = []
-testing_pairs = []
+# training_pairs = []
+# testing_pairs = []
 
-for i, group in enumerate(train_data.groupby("author_email")):
-    pair = []
-    for i, message in enumerate(group[1]['message']):
-        pair.append(message)
-        if i % 2 == 1:
-            pair.append(1)
-            training_pairs.append(pair)
-            pair = []
+# for i, group in enumerate(train_data.groupby("author_email")):
+#     pair = []
+#     for i, message in enumerate(group[1]['message']):
+#         pair.append(message)
+#         if i % 2 == 1:
+#             pair.append(1)
+#             training_pairs.append(pair)
+#             pair = []
 
-for i, group in enumerate(test_data.groupby("author_email")):
-    pair = []
-    for i, message in enumerate(group[1]['message']):
-        pair.append(message)
-        if i % 2 == 1:
-            pair.append(1)
-            testing_pairs.append(pair)
-            pair = []
+# for i, group in enumerate(test_data.groupby("author_email")):
+#     pair = []
+#     for i, message in enumerate(group[1]['message']):
+#         pair.append(message)
+#         if i % 2 == 1:
+#             pair.append(1)
+#             testing_pairs.append(pair)
+#             pair = []
 
 
 # training_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in training_pairs]
 # testing_pairs_encoding = [[tokenize_function(sentence1), tokenize_function(sentence2), target] for sentence1, sentence2, target in testing_pairs]
+
+# Do this when taking a subset to ensure that shuffling happens before taking subsets
+training_pairs.shuffle()
+testing_pairs.shuffle()
 
 train_dataloader = DataLoader(training_pairs[:wandb.config['subset_size']], wandb.config['batch_size'], shuffle=True, drop_last=True, num_workers=wandb.config['num_workers'])
 test_dataloader = DataLoader(testing_pairs[:wandb.config['subset_size']], wandb.config['batch_size'], shuffle=False, drop_last=True, num_workers=wandb.config['num_workers'])
@@ -188,9 +192,6 @@ if __name__ == '__main__':
     trainer = L.Trainer(
 
         # Multi_GPU: num_nodes=1, strategy="ddp", or gpus=[0, 1]
-        # gpus=[0, 1] on server leads to:
-        # lightning_lite.utilities.exceptions.MisconfigurationException: You requested gpu: [0, 1]
-        # But your machine only has: [0]
 
         accelerator=wandb.config['accelerator'],
         devices=wandb.config['devices'],
