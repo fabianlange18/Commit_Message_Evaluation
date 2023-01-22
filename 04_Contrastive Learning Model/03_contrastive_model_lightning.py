@@ -15,36 +15,35 @@ MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
 from transformers import AutoTokenizer, AutoModel
 
-
 import wandb
-wandb.init(project="contrastive_model", entity="commit_message_evaluation")
 
 # Server GPU
 wandb.config = {
-  "batch_size": 256,
+  "batch_size": 512,
   "learning_rate": 1e-3,
   "max_length": 20,
-  "epochs": 3,
+  "epochs": 15,
   "num_workers": 48,
   "precision": 16,
   "accelerator": 'gpu',
   "devices": 1,
-  "subset_size": 10000000
+  "subset_size": 500000
 }
 
-# CPU
+# Local
 # wandb.config = {
 #   "batch_size": 64,
 #   "learning_rate": 1e-3,
 #   "max_length": 20,
-#   "epochs": 1,
+#   "epochs": 10,
 #   "num_workers": 8,
 #   "precision": 16,
 #   "accelerator": 'mps',
 #   "devices": 1,
-#   "subset_size": 150
+#   "subset_size": 1000
 # }
 
+wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
 ######### Helper functions #########
 # Tokenization
@@ -96,7 +95,7 @@ testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
 #     for i, message in enumerate(group[1]['message']):
 #         pair.append(message)
 #         if i % 2 == 1:
-#             pair.append(1)
+#             pair.append(1 if random.choice([True, False]) else -1)
 #             training_pairs.append(pair)
 #             pair = []
 
@@ -105,7 +104,7 @@ testing_pairs = build_contrastive_pairs('data/04c_Test_Set.pkl', 647)
 #     for i, message in enumerate(group[1]['message']):
 #         pair.append(message)
 #         if i % 2 == 1:
-#             pair.append(1)
+#             pair.append(1 if random.choice([True, False]) else -1)
 #             testing_pairs.append(pair)
 #             pair = []
 
@@ -125,7 +124,7 @@ test_dataloader = DataLoader(testing_pairs[:wandb.config['subset_size']], wandb.
 class SBERT(L.LightningModule):
     def __init__(self):
         super().__init__()
-        self.sbert = AutoModel.from_pretrained(MODEL)
+        self.sbert = AutoModel.from_pretrained(MODEL) # TODO: - exchange this with from config?
 
     def forward(self, sentence): # sentence
         encoding = tokenize_function(sentence)
