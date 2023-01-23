@@ -5,9 +5,9 @@ from collections import Counter
 import warnings
 warnings.filterwarnings('ignore')
 
-def k_means_summary(predictions, n_clusters, data):
-    k_means_summary = pd.DataFrame(columns=['Number of Messages', 'Number of different Authors', 'Average number of commits per different Author', 'Most common Author', 'Number of different Projects', 'Average number of commits per different Project', 'Most common project'])
-    k_means_summary['Number of Messages'] = [tuple[1] for tuple in sorted(Counter(predictions).items(), key=lambda pair: pair[0])]
+def clustering_summary(predictions, n_clusters, data):
+    clustering_summary = pd.DataFrame(columns=['Number of Messages', 'Number of different Authors', 'Average number of commits per different Author', 'Most common Author', 'Number of different Projects', 'Average number of commits per different Project', 'Most common project'])
+    clustering_summary['Number of Messages'] = [tuple[1] for tuple in sorted(Counter(predictions).items(), key=lambda pair: pair[0])]
     for label in range(n_clusters):
         author_emails = []
         projects = []
@@ -17,12 +17,12 @@ def k_means_summary(predictions, n_clusters, data):
                 projects.append(data["project"][i])
         commiter_emails_count = Counter(author_emails)
         projects_count = Counter(projects)
-        k_means_summary['Number of different Authors'][label] = int(len(commiter_emails_count))
-        k_means_summary['Average number of commits per different Author'][label] = float(np.mean(list(commiter_emails_count.values())))
-        k_means_summary['Most common Author'][label] = commiter_emails_count.most_common(1)[0]
-        k_means_summary['Number of different Projects'][label] = int(len(projects_count))
-        k_means_summary['Average number of commits per different Project'][label] = float(np.mean(list(projects_count.values())))
-        k_means_summary['Most common project'][label] = projects_count.most_common(1)[0]
+        clustering_summary['Number of different Authors'][label] = int(len(commiter_emails_count))
+        clustering_summary['Average number of commits per different Author'][label] = float(np.mean(list(commiter_emails_count.values())))
+        clustering_summary['Most common Author'][label] = commiter_emails_count.most_common(1)[0]
+        clustering_summary['Number of different Projects'][label] = int(len(projects_count))
+        clustering_summary['Average number of commits per different Project'][label] = float(np.mean(list(projects_count.values())))
+        clustering_summary['Most common project'][label] = projects_count.most_common(1)[0]
         convert_dict = {
             'Number of Messages' : float,
             'Number of different Authors' : float,
@@ -32,14 +32,16 @@ def k_means_summary(predictions, n_clusters, data):
             'Average number of commits per different Project' : float,
             'Most common project' : str
             }
-        k_means_summary = k_means_summary.astype(convert_dict)
-    return k_means_summary
+        clustering_summary = clustering_summary.astype(convert_dict)
+    print(f"There are {len(data['author_email'].unique())} different authors.")
+    print(f"There are {len(data['project'].unique())} different projects.")
+    return clustering_summary
 
 
 
 
 
-def print_k_means_classes(predictions, n_clusters, data, message_details=False):
+def print_clustering_classes(predictions, n_clusters, data, message_details=False):
     for label in range(n_clusters):
         print("\n________________ Class " + str(label) + " ________________\n")
         class_counter = 1

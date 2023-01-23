@@ -124,7 +124,7 @@ test_dataloader = DataLoader(testing_pairs[:wandb.config['subset_size']], wandb.
 class SBERT(L.LightningModule):
     def __init__(self):
         super().__init__()
-        self.sbert = AutoModel.from_pretrained(MODEL) # TODO: - exchange this with from config?
+        self.sbert = AutoModel.from_config() # TODO: - exchange this with from config?
 
     def forward(self, sentence): # sentence
         encoding = tokenize_function(sentence)
