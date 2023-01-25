@@ -1,7 +1,7 @@
 # the following installations are required
 # python3 -m textblob.download_corpora
 # python3 -m spacy download en_core_web_sm
-
+from tqdm import tqdm
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob
 
@@ -16,7 +16,7 @@ def build_featureset(data, subset_size = 100000, normalize = True, output_path =
 
     feature_set = []
 
-    for message in data['message'][:subset_size]:
+    for message in tqdm(data['message'][:subset_size]):
         
         number_of_chars         = len(message)
         number_of_words         = len(nlp(message))

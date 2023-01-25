@@ -5,10 +5,12 @@ from collections import Counter
 import warnings
 warnings.filterwarnings('ignore')
 
-def clustering_summary(predictions, n_clusters, data):
+def clustering_summary(predictions, data):
+    if np.isin(-1, predictions):
+        predictions += 1
     clustering_summary = pd.DataFrame(columns=['Number of Messages', 'Number of different Authors', 'Average number of commits per different Author', 'Most common Author', 'Number of different Projects', 'Average number of commits per different Project', 'Most common project'])
     clustering_summary['Number of Messages'] = [tuple[1] for tuple in sorted(Counter(predictions).items(), key=lambda pair: pair[0])]
-    for label in range(n_clusters):
+    for label in clustering_summary.index:
         author_emails = []
         projects = []
         for i, _ in enumerate(data['message']):
@@ -41,8 +43,10 @@ def clustering_summary(predictions, n_clusters, data):
 
 
 
-def print_clustering_classes(predictions, n_clusters, data, message_details=False):
-    for label in range(n_clusters):
+def print_clustering_classes(predictions, data, message_details=False):
+    if np.isin(-1, predictions):
+        predictions += 1
+    for label in sorted(list(set(predictions))):
         print("\n________________ Class " + str(label) + " ________________\n")
         class_counter = 1
         author_emails = []
