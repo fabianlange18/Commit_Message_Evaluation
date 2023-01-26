@@ -30,7 +30,7 @@ wandb.config = {
   "epochs": 10,
   "num_workers": 8,
   "precision": 16,
-  "accelerator": 'mps',
+  "accelerator": 'cpu',
   "devices": 1,
   "subset_size": 1000
 }
