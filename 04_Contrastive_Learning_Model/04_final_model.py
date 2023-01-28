@@ -26,7 +26,8 @@ wandb.config = {
   "accelerator": 'gpu',
   "devices": 1,
   "train_subset_size": 70000,
-  "validate_subset_size": 15000
+  "validate_subset_size": 15000,
+  "test_subset_size": 15000
 }
 
 # Local MPS
@@ -38,16 +39,17 @@ wandb.config = {
 #   "precision": 16,
 #   "accelerator": 'mps',
 #   "devices": 1,
-#   "train_subset_size": 65,
-#   "validate_subset_size": 35
+#   "train_subset_size": 700,
+#   "validate_subset_size": 150,
+#   "test_subset_size": 150
 # }
 
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
 def load_data():
-    train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', 1) # , 369)
-    validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', 1) #, 650)
-    test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', 1) # 647)
+    train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
+    validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
+    test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
 
     d = {
         'train': train,
@@ -170,39 +172,22 @@ class StyleModel(L.LightningModule):
         self.log('val_loss', loss, batch_size=wandb.config['batch_size'])
 
 
-# class ContrastivePairsData(L.LightningDataModule):
-#     def __init__(self, batch_size):
-#         super().__init__()
-#         self.batch_size = batch_size
 
-#     def prepare_data(self):
-#         load_data()
 
-#     def train_dataloader(self):
-#         return torch.utils.data.DataLoader(
-#             dataset=data['train'][:wandb.config['subset_size']],
-#             batch_size=wandb.config['batch_size'],
-#             shuffle=True
-#         )
+
 
 if __name__ == '__main__':
     data = load_data()
     
-    train_subset_indices = random.choices(list(range(0, len(data['train']))), k=wandb.config['train_subset_size'])
-    train_subset = torch.utils.data.Subset(data['train'], train_subset_indices)
-
-    validate_subset_indices = random.choices(list(range(0, len(data['validate']))), k=wandb.config['validate_subset_size'])
-    validate_subset = torch.utils.data.Subset(data['validate'], validate_subset_indices)
-    
     train_dataloader = torch.utils.data.DataLoader(
-        dataset=train_subset,
+        dataset=data['train'],
         batch_size=wandb.config['batch_size'],
         shuffle=True,
         drop_last=True
     )
 
     validate_dataloader = torch.utils.data.DataLoader(
-        dataset=validate_subset,
+        dataset=data['validate'],
         batch_size=wandb.config['batch_size'],
         drop_last=True
     )

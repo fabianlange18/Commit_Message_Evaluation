@@ -31,7 +31,7 @@ def build_contrastive_pairs(data_path, cut_amount):
 
 
 
-def build_contrastive_pairs_data_dict(data_path, cut_amount):
+def build_contrastive_pairs_data_dict(data_path, cut_amount, subset_size = 100_000_000):
     data = pd.read_pickle(data_path)
     train_data_groups = data.groupby("author_email")
 
@@ -49,7 +49,11 @@ def build_contrastive_pairs_data_dict(data_path, cut_amount):
                 messages_1.append(message_1)
                 messages_2.append(message_2)
                 target.append(1)
-                positive_count += 1
+
+    messages_1 = messages_1[:int(subset_size / 2)]
+    messages_2 = messages_2[:int(subset_size / 2)]
+    target = target[:int(subset_size / 2)]
+    positive_count = len(messages_1)
 
     groups_calculated = []
 
@@ -65,6 +69,11 @@ def build_contrastive_pairs_data_dict(data_path, cut_amount):
                     messages_2.append(message_2)
                     target.append(-1)
                     negative_count += 1
+
+    messages_1 = messages_1[:subset_size]
+    messages_2 = messages_2[:subset_size]
+    target = target[:subset_size]
+    negative_count = len(messages_1) - positive_count
 
     print("Positive Pairs:")
     print(positive_count)
