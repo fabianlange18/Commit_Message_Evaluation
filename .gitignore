@@ -1,6 +1,6 @@
 data/*
 .DS_Store
-
+.vscode
 venv/
 wandb/
 test_trainer/
