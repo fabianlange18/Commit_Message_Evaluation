@@ -38,17 +38,17 @@ wandb.config = {
 # Local MPS
 # wandb.config = {
 #   "batch_size": 32,
-#   "learning_rate": 1e-3,
+#   "learning_rate": 1e-4,
 #   "max_length": 20,
 #   "epochs": 10,
 #   "precision": 16,
 #   "accelerator": 'mps',
 #   "devices": 1,
-#   "num_workers": 8
+#   "num_workers": 8,
 #   "train_subset_size": 700,
 #   "validate_subset_size": 150,
 #   "test_subset_size": 150,
-#   "margin": -0.5
+#   "margin": 0
 # }
 
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
@@ -117,8 +117,8 @@ loss_fn = nn.CosineEmbeddingLoss(margin=wandb.config['margin'])
 class StyleModel(L.LightningModule):
     def __init__(self):
         super().__init__()
-        self.sbert_m_s = SBERT(pretrained_weights=False)
-        self.sbert_m   = SBERT(frozen=True)
+        self.sbert_m_s = SBERT(frozen=True)
+        self.sbert_m   = SBERT(pretrained_weights=False)
 
     def forward(self, encoding):
         embeddings_m_s = self.sbert_m_s(encoding)
@@ -129,7 +129,7 @@ class StyleModel(L.LightningModule):
 
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.sbert_m_s.parameters(), lr=wandb.config['learning_rate'])
+        optimizer = torch.optim.Adam(self.sbert_m.parameters(), lr=wandb.config['learning_rate'])
         return optimizer
 
     def training_step(self, batch, batch_idx):
@@ -178,6 +178,28 @@ class StyleModel(L.LightningModule):
         wandb.log({"val_loss": loss})
         self.log('val_loss', loss, batch_size=wandb.config['batch_size'])
 
+    def test_step(self, batch, batch_idx):
+        encoding_1 = {}
+        encoding_1['input_ids'] = batch['input_ids_1'].squeeze()
+        encoding_1['token_type_ids'] = batch['token_type_ids_1'].squeeze()
+        encoding_1['attention_mask'] = batch['attention_mask_1'].squeeze()
+
+        encoding_2 = {}
+        encoding_2['input_ids'] = batch['input_ids_2'].squeeze()
+        encoding_2['token_type_ids'] = batch['token_type_ids_2'].squeeze()
+        encoding_2['attention_mask'] = batch['attention_mask_2'].squeeze()
+
+        # Compute prediction error
+        X1_s = self(encoding_1)
+        X2_s = self(encoding_2)
+
+        # Compute Loss
+        loss = loss_fn(X1_s, X2_s, batch['target'])
+
+        # Log Loss to WandB
+        wandb.log({"test_loss": loss})
+        self.log('test_loss', loss, batch_size=wandb.config['batch_size'])
+
 
 
 
@@ -201,6 +223,13 @@ if __name__ == '__main__':
         drop_last=True
     )
 
+    test_dataloader = torch.utils.data.DataLoader(
+        dataset=data['test'],
+        batch_size=wandb.config['batch_size'],
+        num_workers=wandb.config['num_workers'],
+        drop_last=True
+    )
+
     model = StyleModel()
     wandb.watch(model)
     trainer = L.Trainer(
@@ -210,4 +239,5 @@ if __name__ == '__main__':
         precision=wandb.config['precision']
     )
     trainer.fit(model, train_dataloader, validate_dataloader)
+    trainer.test(model, test_dataloader)
     torch.save(model.state_dict(), 'model/Subset_Style_Model.pt')
