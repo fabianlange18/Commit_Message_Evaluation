@@ -20,11 +20,12 @@ from util.contrastive_pairs import build_contrastive_pairs_data_dict
 wandb.config = {
   "batch_size": 256,
   "learning_rate": 1e-3,
-  "max_length": 20,
+  "max_length": 25,
   "epochs": 25,
   "precision": 16,
   "accelerator": 'gpu',
   "devices": 1,
+  "num_workers": 48,
   "train_subset_size": 70000,
   "validate_subset_size": 15000,
   "test_subset_size": 15000
@@ -39,6 +40,7 @@ wandb.config = {
 #   "precision": 16,
 #   "accelerator": 'mps',
 #   "devices": 1,
+#   "num_workers": 8
 #   "train_subset_size": 700,
 #   "validate_subset_size": 150,
 #   "test_subset_size": 150
@@ -105,7 +107,7 @@ class SBERT(L.LightningModule):
         sentence_embeddings = torch.nn.functional.normalize(sentence_embeddings, p=2, dim=1)
         return sentence_embeddings
 
-loss_fn = nn.CosineEmbeddingLoss()
+loss_fn = nn.CosineEmbeddingLoss(margin=.2)
 
 class StyleModel(L.LightningModule):
     def __init__(self):
@@ -182,6 +184,7 @@ if __name__ == '__main__':
     train_dataloader = torch.utils.data.DataLoader(
         dataset=data['train'],
         batch_size=wandb.config['batch_size'],
+        num_workers=wandb.config['num_workers'],
         shuffle=True,
         drop_last=True
     )
@@ -189,6 +192,7 @@ if __name__ == '__main__':
     validate_dataloader = torch.utils.data.DataLoader(
         dataset=data['validate'],
         batch_size=wandb.config['batch_size'],
+        num_workers=wandb.config['num_workers'],
         drop_last=True
     )
 
