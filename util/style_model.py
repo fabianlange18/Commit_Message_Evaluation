@@ -57,32 +57,3 @@ class StyleModel(L.LightningModule):
         # maybe use a feed-forward layer here instead
         embeddings_s = embeddings_m_s - embeddings_m
         return embeddings_s
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.sbert_m_s.parameters(), lr=wandb.config['learning_rate'])
-        return optimizer
-
-    def training_step(self, train_batch, batch_idx):
-        X1, X2, target = train_batch
-
-        # Compute prediction error
-        X1_s = self(X1)
-        X2_s = self(X2)
-
-        # Compute Loss
-        loss = self.loss_fn(X1_s, X2_s, target)
-        
-        # Log Loss to WandB
-        wandb.log({"train_loss": loss})
-
-        self.log('train_loss', loss)
-        return loss
-
-    def validation_step(self, val_batch, batch_idx):
-        X1, X2, target = val_batch
-        X1_s = self(X1)
-        X2_s = self(X2)
-        loss = self.loss_fn(X1_s, X2_s, target)
-        # Log Loss to WandB
-        wandb.log({"val_loss": loss})
-        self.log('val_loss', loss, batch_size=wandb.config['batch_size'])

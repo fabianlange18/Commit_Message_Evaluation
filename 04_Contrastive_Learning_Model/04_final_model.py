@@ -21,6 +21,7 @@ from util.contrastive_pairs import build_contrastive_pairs_data_dict
 
 # Server GPU
 wandb.config = {
+  "model_name": 'OnlyTestDataModel',
   "batch_size": 256,
   "learning_rate": 1e-5,
   "max_length": 25,
@@ -31,31 +32,34 @@ wandb.config = {
   "num_workers": 48,
   "train_subset_size": 70000,
   "validate_subset_size": 15000,
-  "test_subset_size": 15000,
+  "test_subset_size": 1000000,
   "margin": 0
 }
 
 # Local MPS
 # wandb.config = {
+#   "model_name": 'OnlyTestDataModel',
 #   "batch_size": 32,
 #   "learning_rate": 1e-4,
 #   "max_length": 20,
-#   "epochs": 10,
+#   "epochs": 1,
 #   "precision": 16,
 #   "accelerator": 'mps',
 #   "devices": 1,
 #   "num_workers": 8,
-#   "train_subset_size": 700,
-#   "validate_subset_size": 150,
-#   "test_subset_size": 150,
+#   "train_subset_size": 150000,
+#   "validate_subset_size": 150000,
+#   "test_subset_size": 150000,
 #   "margin": 0
 # }
 
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
 def load_data():
-    train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
-    validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
+    #train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
+    #validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
+    train = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
+    validate = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
     test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
 
     d = {
@@ -132,7 +136,7 @@ class StyleModel(L.LightningModule):
         optimizer = torch.optim.Adam(self.sbert_m.parameters(), lr=wandb.config['learning_rate'])
         return optimizer
 
-    def training_step(self, batch, batch_idx):
+    def step(self, batch, batch_idx, step_prefix):
         encoding_1 = {}
         encoding_1['input_ids'] = batch['input_ids_1'].squeeze()
         encoding_1['token_type_ids'] = batch['token_type_ids_1'].squeeze()
@@ -151,58 +155,19 @@ class StyleModel(L.LightningModule):
         loss = loss_fn(X1_s, X2_s, batch['target'])
         
         # Log Loss to WandB
-        wandb.log({"train_loss": loss})
+        wandb.log({f"{step_prefix}_loss": loss})
 
-        self.log('train_loss', loss)
+        self.log(f"{step_prefix}_loss", loss)
         return loss
 
+    def training_step(self, batch, batch_idx):
+        return self.step(batch, batch_idx, 'train')
+
     def validation_step(self, batch, batch_idx):
-        encoding_1 = {}
-        encoding_1['input_ids'] = batch['input_ids_1'].squeeze()
-        encoding_1['token_type_ids'] = batch['token_type_ids_1'].squeeze()
-        encoding_1['attention_mask'] = batch['attention_mask_1'].squeeze()
-
-        encoding_2 = {}
-        encoding_2['input_ids'] = batch['input_ids_2'].squeeze()
-        encoding_2['token_type_ids'] = batch['token_type_ids_2'].squeeze()
-        encoding_2['attention_mask'] = batch['attention_mask_2'].squeeze()
-
-        # Compute prediction error
-        X1_s = self(encoding_1)
-        X2_s = self(encoding_2)
-
-        # Compute Loss
-        loss = loss_fn(X1_s, X2_s, batch['target'])
-
-        # Log Loss to WandB
-        wandb.log({"val_loss": loss})
-        self.log('val_loss', loss, batch_size=wandb.config['batch_size'])
+        self.step(batch, batch_idx, 'validate')
 
     def test_step(self, batch, batch_idx):
-        encoding_1 = {}
-        encoding_1['input_ids'] = batch['input_ids_1'].squeeze()
-        encoding_1['token_type_ids'] = batch['token_type_ids_1'].squeeze()
-        encoding_1['attention_mask'] = batch['attention_mask_1'].squeeze()
-
-        encoding_2 = {}
-        encoding_2['input_ids'] = batch['input_ids_2'].squeeze()
-        encoding_2['token_type_ids'] = batch['token_type_ids_2'].squeeze()
-        encoding_2['attention_mask'] = batch['attention_mask_2'].squeeze()
-
-        # Compute prediction error
-        X1_s = self(encoding_1)
-        X2_s = self(encoding_2)
-
-        # Compute Loss
-        loss = loss_fn(X1_s, X2_s, batch['target'])
-
-        # Log Loss to WandB
-        wandb.log({"test_loss": loss})
-        self.log('test_loss', loss, batch_size=wandb.config['batch_size'])
-
-
-
-
+        self.step(batch, batch_idx, 'test')
 
 
 if __name__ == '__main__':
@@ -240,4 +205,4 @@ if __name__ == '__main__':
     )
     trainer.fit(model, train_dataloader, validate_dataloader)
     trainer.test(model, test_dataloader)
-    torch.save(model.state_dict(), 'model/Subset_Style_Model.pt')
+    torch.save(model.state_dict(), wandb.config['model_name'])
