@@ -22,7 +22,7 @@ from util.contrastive_pairs import build_contrastive_pairs_data_dict
 # Server GPU
 wandb.config = {
   "batch_size": 256,
-  "learning_rate": 1e-4,
+  "learning_rate": 1e-5,
   "max_length": 25,
   "epochs": 25,
   "precision": 16,
