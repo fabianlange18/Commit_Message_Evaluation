@@ -32,7 +32,7 @@ wandb.config = {
   "train_subset_size": 70000,
   "validate_subset_size": 15000,
   "test_subset_size": 15000,
-  "margin": -0.5
+  "margin": 0
 }
 
 # Local MPS
