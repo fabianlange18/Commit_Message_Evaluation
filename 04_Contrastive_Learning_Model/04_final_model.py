@@ -12,6 +12,9 @@ logging.basicConfig(level=logging.INFO)
 # https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import sys
 sys.path.append('.')
 from util.contrastive_pairs import build_contrastive_pairs_data_dict
@@ -19,7 +22,7 @@ from util.contrastive_pairs import build_contrastive_pairs_data_dict
 # Server GPU
 wandb.config = {
   "batch_size": 256,
-  "learning_rate": 1e-3,
+  "learning_rate": 1e-4,
   "max_length": 25,
   "epochs": 25,
   "precision": 16,
@@ -28,7 +31,8 @@ wandb.config = {
   "num_workers": 48,
   "train_subset_size": 70000,
   "validate_subset_size": 15000,
-  "test_subset_size": 15000
+  "test_subset_size": 15000,
+  "margin": -0.5
 }
 
 # Local MPS
@@ -43,7 +47,8 @@ wandb.config = {
 #   "num_workers": 8
 #   "train_subset_size": 700,
 #   "validate_subset_size": 150,
-#   "test_subset_size": 150
+#   "test_subset_size": 150,
+#   "margin": -0.5
 # }
 
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
@@ -107,7 +112,7 @@ class SBERT(L.LightningModule):
         sentence_embeddings = torch.nn.functional.normalize(sentence_embeddings, p=2, dim=1)
         return sentence_embeddings
 
-loss_fn = nn.CosineEmbeddingLoss(margin=.2)
+loss_fn = nn.CosineEmbeddingLoss(margin=wandb.config['margin'])
 
 class StyleModel(L.LightningModule):
     def __init__(self):
