@@ -203,7 +203,7 @@ if __name__ == '__main__':
 
     validate_dataloader = torch.utils.data.DataLoader(
         dataset=validate_subset,
-        batch_size=wandb.config['batch_size']
+        batch_size=wandb.config['batch_size'],
         drop_last=True
     )
 
