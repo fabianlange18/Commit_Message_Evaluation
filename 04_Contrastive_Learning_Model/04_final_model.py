@@ -23,7 +23,7 @@ from util.tokenization import TokenizationWrapper, mean_pooling
 
 # Server GPU
 wandb.config = {
-  "model_name": 'TestData_StyleModel',
+  "model_name": 'ALLData_StyleModel.pt',
   "batch_size": 256,
   "learning_rate": 1e-5,
   "max_length": 25,
