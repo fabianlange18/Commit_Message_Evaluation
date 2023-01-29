@@ -50,10 +50,14 @@ def build_contrastive_pairs_data_dict(data_path, cut_amount, subset_size = 100_0
                 messages_2.append(message_2)
                 target.append(1)
 
+    positive_count_total = len(messages_1)
     messages_1 = messages_1[:int(subset_size / 2)]
     messages_2 = messages_2[:int(subset_size / 2)]
     target = target[:int(subset_size / 2)]
-    positive_count = len(messages_1)
+    positive_count_subset = len(messages_1)
+
+    print("Positive Pairs:")
+    print(f"{positive_count_subset} out of a total of {positive_count_total}")
 
     groups_calculated = []
 
@@ -70,13 +74,12 @@ def build_contrastive_pairs_data_dict(data_path, cut_amount, subset_size = 100_0
                     target.append(-1)
                     negative_count += 1
 
+    negative_count_total = len(messages_1) - positive_count_subset
     messages_1 = messages_1[:subset_size]
     messages_2 = messages_2[:subset_size]
     target = target[:subset_size]
-    negative_count = len(messages_1) - positive_count
+    negative_count_subset = len(messages_1) - positive_count_subset
 
-    print("Positive Pairs:")
-    print(positive_count)
     print("Negative Pairs:")
-    print(negative_count)
+    print(f"{negative_count_subset} out of a total of {negative_count_total}")
     return Dataset.from_dict({'messages_1': messages_1, 'messages_2': messages_2, 'target': target})

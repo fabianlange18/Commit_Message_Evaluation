@@ -18,6 +18,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import sys
 sys.path.append('.')
 from util.contrastive_pairs import build_contrastive_pairs_data_dict
+from util.tokenization import TokenizationWrapper, mean_pooling
+
 
 # Server GPU
 wandb.config = {
@@ -30,9 +32,9 @@ wandb.config = {
   "accelerator": 'gpu',
   "devices": 1,
   "num_workers": 48,
-  #"train_subset_size": 70000,
-  #"validate_subset_size": 15000,
-  "test_subset_size": 100000,
+  "train_subset_size": 70000,
+  "validate_subset_size": 15000,
+  "test_subset_size": 15000,
   "margin": 0
 }
 
@@ -56,14 +58,13 @@ wandb.config = {
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
 def load_data():
-    #train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
-    #validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
-    train = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
-    validate = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
+    train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
+    validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
     test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
+    all = build_contrastive_pairs_data_dict('data/03_Subset_Frequent_Committers.pkl', cut_amount=500, subset_size=wandb.config["train_subset_size"])
 
     d = {
-        'train': train,
+        'train': all,
         'validate': validate,
         'test': test
     }
@@ -71,28 +72,8 @@ def load_data():
     dataloader = DatasetDict(d)
     dataloader.set_format(type='pytorch')
     print("Tokenization (Runs 3x)")
-    dataloader = dataloader.map(tokenize_function)
+    dataloader = dataloader.map(TokenizationWrapper(AutoTokenizer.from_pretrained(MODEL), wandb.config['max_length']).tokenize_function, )
     return dataloader
-
-tokenizer = AutoTokenizer.from_pretrained(MODEL)
-
-def tokenize_function(examples):
-    all_features = {}
-    features_1 = tokenizer(examples['messages_1'], padding='max_length', truncation=True, return_tensors='pt', max_length=wandb.config['max_length'])
-    features_2 = tokenizer(examples['messages_2'], padding='max_length', truncation=True, return_tensors='pt', max_length=wandb.config['max_length'])
-    all_features['input_ids_1']      = features_1['input_ids']
-    all_features['token_type_ids_1'] = features_1['token_type_ids']
-    all_features['attention_mask_1'] = features_1['attention_mask']
-    all_features['input_ids_2']      = features_2['input_ids']
-    all_features['token_type_ids_2'] = features_2['token_type_ids']
-    all_features['attention_mask_2'] = features_2['attention_mask']
-    return all_features
-
-# Mean Pooling - Take attention mask into account for correct averaging
-def mean_pooling(model_output, attention_mask):
-    token_embeddings = model_output[0] # First element of model_output contains all token embeddings
-    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
 
 class SBERT(L.LightningModule):

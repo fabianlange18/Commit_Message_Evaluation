@@ -23,18 +23,18 @@ def clustering_summary(predictions, data):
         commiter_emails_count = Counter(author_emails)
         projects_count = Counter(projects)
         clustering_summary['Number of different Authors'][label] = int(len(commiter_emails_count))
-        clustering_summary['Average number of commits per different Author'][label] = float(np.mean(list(commiter_emails_count.values())))
+        clustering_summary['Median number of commits per different Author'][label] = float(np.median(list(commiter_emails_count.values())))
         clustering_summary['Most common Author'][label] = commiter_emails_count.most_common(1)[0]
         clustering_summary['Number of different Projects'][label] = int(len(projects_count))
-        clustering_summary['Average number of commits per different Project'][label] = float(np.mean(list(projects_count.values())))
+        clustering_summary['Median number of commits per different Project'][label] = float(np.median(list(projects_count.values())))
         clustering_summary['Most common project'][label] = projects_count.most_common(1)[0]
         convert_dict = {
             'Number of Messages' : float,
             'Number of different Authors' : float,
-            'Average number of commits per different Author' : float,
+            'Median number of commits per different Author' : float,
             'Most common Author' : str,
             'Number of different Projects' : float,
-            'Average number of commits per different Project' : float,
+            'Median number of commits per different Project' : float,
             'Most common project' : str
             }
         clustering_summary = clustering_summary.astype(convert_dict)
