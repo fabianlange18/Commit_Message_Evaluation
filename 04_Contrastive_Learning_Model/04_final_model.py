@@ -30,9 +30,9 @@ wandb.config = {
   "accelerator": 'gpu',
   "devices": 1,
   "num_workers": 48,
-  "train_subset_size": 70000,
-  "validate_subset_size": 15000,
-  "test_subset_size": 1000000,
+  #"train_subset_size": 70000,
+  #"validate_subset_size": 15000,
+  "test_subset_size": 100000,
   "margin": 0
 }
 
