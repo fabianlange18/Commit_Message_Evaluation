@@ -21,7 +21,7 @@ from util.contrastive_pairs import build_contrastive_pairs_data_dict
 
 # Server GPU
 wandb.config = {
-  "model_name": 'OnlyTestDataModel',
+  "model_name": 'TestData_StyleModel',
   "batch_size": 256,
   "learning_rate": 1e-5,
   "max_length": 25,
@@ -38,7 +38,7 @@ wandb.config = {
 
 # Local MPS
 # wandb.config = {
-#   "model_name": 'OnlyTestDataModel',
+#   "model_name": 'TestData_StyleModel',
 #   "batch_size": 32,
 #   "learning_rate": 1e-4,
 #   "max_length": 20,

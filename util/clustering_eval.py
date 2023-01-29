@@ -1,6 +1,9 @@
+import spacy
 import numpy as np
 import pandas as pd
 from collections import Counter
+from spacytextblob.spacytextblob import SpacyTextBlob
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -38,6 +41,36 @@ def clustering_summary(predictions, data):
     print(f"There are {len(data['author_email'].unique())} different authors.")
     print(f"There are {len(data['project'].unique())} different projects.")
     return clustering_summary
+
+
+
+
+
+def clustering_spacy_evaluation(predictions, data):
+    nlp = spacy.load("en_core_web_sm")
+    nlp.add_pipe('spacytextblob')
+
+    spacy_summary = pd.DataFrame(
+        columns=[str(label) for label in sorted(list(set(predictions)))],
+        index=['polarity', 'subjectivity'])
+
+    if np.isin(-1, predictions):
+        predictions += 1
+    
+    for label in sorted(list(set(predictions))):
+        messages = data['message'].where(predictions == label)
+        docs = nlp.pipe(messages)
+        polarities = []
+        subjectivities = []
+
+        for doc in docs:
+            polarities.append(doc._.blob.polarity)
+            subjectivities.append(doc._.blob.subjectivity)
+
+        spacy_summary['polarity'][str(label)] = np.mean(polarities)
+        spacy_summary['subjectivity'][str(label)] = np.mean(subjectivities)
+
+    return spacy_summary
 
 
 
