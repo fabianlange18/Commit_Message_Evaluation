@@ -22,38 +22,38 @@ from util.tokenization import TokenizationWrapper, mean_pooling
 
 
 # Server GPU
-wandb.config = {
-  "model_name": 'ALLData_StyleModel.pt',
-  "batch_size": 256,
-  "learning_rate": 1e-5,
-  "max_length": 25,
-  "epochs": 25,
-  "precision": 16,
-  "accelerator": 'gpu',
-  "devices": 1,
-  "num_workers": 48,
-  "train_subset_size": 70000,
-  "validate_subset_size": 15000,
-  "test_subset_size": 15000,
-  "margin": 0
-}
-
-# Local MPS
 # wandb.config = {
-#   "model_name": 'TestData_StyleModel',
-#   "batch_size": 32,
-#   "learning_rate": 1e-4,
-#   "max_length": 20,
-#   "epochs": 1,
+#   "model_name": 'ALLData_StyleModel.pt',
+#   "batch_size": 256,
+#   "learning_rate": 1e-3,
+#   "max_length": 25,
+#   "epochs": 25,
 #   "precision": 16,
-#   "accelerator": 'mps',
+#   "accelerator": 'gpu',
 #   "devices": 1,
-#   "num_workers": 8,
-#   "train_subset_size": 150000,
-#   "validate_subset_size": 150000,
-#   "test_subset_size": 150000,
+#   "num_workers": 48,
+#   "train_subset_size": 70000,
+#   "validate_subset_size": 15000,
+#   "test_subset_size": 15000,
 #   "margin": 0
 # }
+
+# Local MPS
+wandb.config = {
+  "model_name": 'TestData_StyleModel',
+  "batch_size": 32,
+  "learning_rate": 1e-4,
+  "max_length": 20,
+  "epochs": 1,
+  "precision": 16,
+  "accelerator": 'mps',
+  "devices": 1,
+  "num_workers": 8,
+  "train_subset_size": 150000,
+  "validate_subset_size": 150000,
+  "test_subset_size": 150000,
+  "margin": 0
+}
 
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
@@ -61,10 +61,10 @@ def load_data():
     train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
     validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
     test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
-    all = build_contrastive_pairs_data_dict('data/03_Subset_Frequent_Committers.pkl', cut_amount=500, subset_size=wandb.config["train_subset_size"])
+    # all = build_contrastive_pairs_data_dict('data/03_Subset_Frequent_Committers.pkl', cut_amount=500, subset_size=wandb.config["train_subset_size"])
 
     d = {
-        'train': all,
+        'train': train,
         'validate': validate,
         'test': test
     }
@@ -72,7 +72,7 @@ def load_data():
     dataloader = DatasetDict(d)
     dataloader.set_format(type='pytorch')
     print("Tokenization (Runs 3x)")
-    dataloader = dataloader.map(TokenizationWrapper(AutoTokenizer.from_pretrained(MODEL), wandb.config['max_length']).tokenize_function, )
+    dataloader = dataloader.map(TokenizationWrapper(AutoTokenizer.from_pretrained(MODEL), wandb.config['max_length']).tokenize_function)
     return dataloader
 
 
@@ -115,6 +115,7 @@ class StyleModel(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.sbert_m.parameters(), lr=wandb.config['learning_rate'])
+        torch.optim.lr_scheduler.LinearLR(optimizer, 1, 0.001, wandb.config['epochs'])
         return optimizer
 
     def step(self, batch, batch_idx, step_prefix):

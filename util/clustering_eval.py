@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 def clustering_summary(predictions, data):
     if np.isin(-1, predictions):
         predictions += 1
-    clustering_summary = pd.DataFrame(columns=['Number of Messages', 'Number of different Authors', 'Average number of commits per different Author', 'Most common Author', 'Number of different Projects', 'Average number of commits per different Project', 'Most common project'])
+    clustering_summary = pd.DataFrame(columns=['Number of Messages', 'Number of different Authors', 'Median number of commits per different Author', 'Most common Author', 'Number of different Projects', 'Median number of commits per different Project', 'Most common project'])
     clustering_summary['Number of Messages'] = [tuple[1] for tuple in sorted(Counter(predictions).items(), key=lambda pair: pair[0])]
     for label in clustering_summary.index:
         author_emails = []
@@ -52,25 +52,42 @@ def clustering_spacy_evaluation(predictions, data):
 
     spacy_summary = pd.DataFrame(
         columns=[str(label) for label in sorted(list(set(predictions)))],
-        index=['polarity', 'subjectivity'])
+        index=['length_mean', 'length_std', 'n_uppercase_mean', 'n_uppercase_std', 'polarity_mean', 'polarity_std', 'subjectivity_mean', 'subjectivity_std'])
 
     if np.isin(-1, predictions):
         predictions += 1
     
     for label in sorted(list(set(predictions))):
         messages = data['message'].where(predictions == label)
+        messages.dropna(inplace=True)
+        messages.reset_index(drop=True, inplace=True)
         docs = nlp.pipe(messages)
+        
+        lengths = []
+        n_upper_case_letters = []
         polarities = []
         subjectivities = []
+
+        for message in messages:
+            lengths.append(len(message))
+            n_upper_case_letters.append(sum(1 for c in message if c.isupper()))
 
         for doc in docs:
             polarities.append(doc._.blob.polarity)
             subjectivities.append(doc._.blob.subjectivity)
 
-        spacy_summary['polarity'][str(label)] = np.mean(polarities)
-        spacy_summary['subjectivity'][str(label)] = np.mean(subjectivities)
+        spacy_summary[str(label)]['length_mean'] = np.mean(lengths)
+        spacy_summary[str(label)]['length_std'] = np.std(lengths)
+        spacy_summary[str(label)]['n_uppercase_mean'] = np.mean(n_upper_case_letters)
+        spacy_summary[str(label)]['n_uppercase_std'] = np.std(n_upper_case_letters)
+        spacy_summary[str(label)]['polarity_mean'] = np.mean(polarities)
+        spacy_summary[str(label)]['polarity_std'] = np.std(polarities)
+        spacy_summary[str(label)]['subjectivity_mean'] = np.mean(subjectivities)
+        spacy_summary[str(label)]['subjectivity_std'] = np.std(subjectivities)
 
-    return spacy_summary
+    spacy_summary.round(2)
+
+    return spacy_summary.style.apply(lambda s: ['background-color: white' if x%4<2 else 'background-color: lightgrey' for x in range(len(s))])
 
 
 
