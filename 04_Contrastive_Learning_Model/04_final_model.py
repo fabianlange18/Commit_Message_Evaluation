@@ -25,16 +25,16 @@ from util.tokenization import TokenizationWrapper, mean_pooling
 wandb.config = {
   "model_name": 'LargerSubset_StyleModel.pt',
   "batch_size": 256,
-  "learning_rate": 1e-3,
+  "learning_rate": 1e-4,
   "max_length": 25,
   "epochs": 25,
   "precision": 16,
   "accelerator": 'gpu',
   "devices": 1,
   "num_workers": 48,
-  "train_subset_size": 700000,
-  "validate_subset_size": 150000,
-  "test_subset_size": 150000,
+  "train_subset_size": 1400000,
+  "validate_subset_size": 300000,
+  "test_subset_size": 300000,
   "margin": 0
 }
 
@@ -49,9 +49,9 @@ wandb.config = {
 #   "accelerator": 'mps',
 #   "devices": 1,
 #   "num_workers": 8,
-#   "train_subset_size": 150000,
-#   "validate_subset_size": 150000,
-#   "test_subset_size": 150000,
+#   "train_subset_size": 700,
+#   "validate_subset_size": 150,
+#   "test_subset_size": 150,
 #   "margin": 0
 # }
 
@@ -114,7 +114,6 @@ class StyleModel(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.sbert_m.parameters(), lr=wandb.config['learning_rate'])
-        torch.optim.lr_scheduler.LinearLR(optimizer, 1, 0.001, wandb.config['epochs'])
         return optimizer
 
     def step(self, batch, batch_idx, step_prefix):
