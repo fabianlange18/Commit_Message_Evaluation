@@ -60,9 +60,22 @@ wandb.config = {
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
 def load_data():
-    train = build_contrastive_pairs_data_dict('data/04-0a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
-    validate = build_contrastive_pairs_data_dict('data/04-0b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
-    test = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
+
+    # 42 Authors (!set wandb config projects to false):
+    # train = build_contrastive_pairs_data_dict('data/04-0a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+    # validate = build_contrastive_pairs_data_dict('data/04-0b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+    # test = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
+
+    if not wandb.config['projects']:
+        # 100 Authors (!set wandb config projects to false):
+        train = build_contrastive_pairs_data_dict('data/04-1a_Authors_Train_Set.pkl', subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+        validate = build_contrastive_pairs_data_dict('data/04-1b_Authors_Validate_Set.pkl', subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+        test = build_contrastive_pairs_data_dict('data/04-1c_Authors_Test_Set.pkl', subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
+    else:
+        # 100 Projects (!set wandb config projects to true):
+        train = build_contrastive_pairs_data_dict('data/04-2a_Projects_Train_Set.pkl', subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+        validate = build_contrastive_pairs_data_dict('data/04-2b_Projects_Validate_Set.pkl', subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+        test = build_contrastive_pairs_data_dict('data/04-2c_Projects_Test_Set.pkl', subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
 
     d = {
         'train': train,
