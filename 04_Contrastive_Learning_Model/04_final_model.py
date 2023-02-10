@@ -23,7 +23,7 @@ from util.tokenization import TokenizationWrapper, mean_pooling
 
 # Server GPU
 wandb.config = {
-  "model_name": 'Project_StyleModel.pt',
+  "model_name": 'Authors_StyleModel.pt',
   "batch_size": 256,
   "learning_rate": 1e-4,
   "max_length": 25,
@@ -36,7 +36,7 @@ wandb.config = {
   "validate_subset_size": 300000,
   "test_subset_size": 300000,
   "margin": 0,
-  "projects": True
+  "projects": False
 }
 
 # Local MPS
