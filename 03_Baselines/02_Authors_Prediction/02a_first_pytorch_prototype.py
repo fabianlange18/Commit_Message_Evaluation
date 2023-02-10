@@ -60,8 +60,8 @@ sweep_config = {
 sweep_id = wandb.sweep(sweep_config, project="authors_clustering")
 
 def load_data(batch_size):
-    train_data = pd.read_pickle('../data/05a_Authors_Train_Set.pkl')
-    test_data = pd.read_pickle('../data/05c_Authors_Test_Set.pkl')
+    train_data = pd.read_pickle('../data/05-0a_Authors_Train_Set.pkl')
+    test_data = pd.read_pickle('../data/05-0c_Authors_Test_Set.pkl')
 
     train_featureset = np.load('../data/05a_Train_Set_Features.npy', allow_pickle=True)
     test_featureset = np.load('../data/05c_Test_Set_Features.npy', allow_pickle=True)

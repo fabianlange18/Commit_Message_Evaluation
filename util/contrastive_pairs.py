@@ -63,7 +63,7 @@ def build_contrastive_pairs_data_dict(data_path, cut_amount = 1000, subset_size 
     final_messages_1 = []
     final_messages_2 = []
     final_target = []
-    for message_1, message_2, target in random.sample(c, int(subset_size / 2)):
+    for message_1, message_2, target in random.sample(c, min(int(subset_size / 2), positive_count_total)):
         final_messages_1.append(message_1)
         final_messages_2.append(message_2)
         final_target.append(target)
@@ -95,7 +95,7 @@ def build_contrastive_pairs_data_dict(data_path, cut_amount = 1000, subset_size 
     negative_count_total = len(messages_1)
     
     c = list(zip(messages_1, messages_2, target))
-    for message_1, message_2, target in random.sample(c, int(subset_size / 2)):
+    for message_1, message_2, target in random.sample(c, min(int(subset_size / 2), negative_count_total)):
         final_messages_1.append(message_1)
         final_messages_2.append(message_2)
         final_target.append(target)

@@ -13,9 +13,9 @@ from torch.utils.data import DataLoader
 
 from sentence_transformers import SentenceTransformer
 
-train_data = pd.read_pickle('data/04a_Train_Set.pkl')
-validate_data = pd.read_pickle('data/04b_Validate_Set.pkl')
-test_data = pd.read_pickle('data/04c_Test_Set.pkl')
+train_data = pd.read_pickle('data/04-0a_Train_Set.pkl')
+validate_data = pd.read_pickle('data/04-0b_Validate_Set.pkl')
+test_data = pd.read_pickle('data/04-0c_Test_Set.pkl')
 
 batch_size = 64
 
