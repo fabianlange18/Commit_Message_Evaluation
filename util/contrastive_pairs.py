@@ -32,12 +32,10 @@ def build_contrastive_pairs(data_path, cut_amount):
 
 
 
-def build_contrastive_pairs_data_dict(data_path, cut_amount = 1000, subset_size = 100_000_000, projects = False):
+def build_contrastive_pairs_data_dict(data_path, cut_amount = 100, subset_size = 100_000_000, projects = False):
     data = pd.read_pickle(data_path)
     if projects:
         train_data_groups = data.groupby("project")
-        if cut_amount == 1000:
-            cut_amount = 100
     else:
         train_data_groups = data.groupby("author_email")
 
