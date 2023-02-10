@@ -23,7 +23,7 @@ from util.tokenization import TokenizationWrapper, mean_pooling
 
 # Server GPU
 wandb.config = {
-  "model_name": 'StyleModel.pt',
+  "model_name": 'Project_StyleModel.pt',
   "batch_size": 256,
   "learning_rate": 1e-4,
   "max_length": 25,
@@ -35,7 +35,8 @@ wandb.config = {
   "train_subset_size": 1400000,
   "validate_subset_size": 300000,
   "test_subset_size": 300000,
-  "margin": 0
+  "margin": 0,
+  "projects": True
 }
 
 # Local MPS
@@ -52,15 +53,16 @@ wandb.config = {
 #   "train_subset_size": 700,
 #   "validate_subset_size": 150,
 #   "test_subset_size": 150,
-#   "margin": 0
+#   "margin": 0,
+#   "projects": True
 # }
 
 wandb.init(project="contrastive_model", entity="commit_message_evaluation", config = wandb.config)
 
 def load_data():
-    train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'])
-    validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'])
-    test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'])
+    train = build_contrastive_pairs_data_dict('data/04a_Train_Set.pkl', cut_amount=369, subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+    validate = build_contrastive_pairs_data_dict('data/04b_Validate_Set.pkl', cut_amount=650, subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+    test = build_contrastive_pairs_data_dict('data/04c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
 
     d = {
         'train': train,
