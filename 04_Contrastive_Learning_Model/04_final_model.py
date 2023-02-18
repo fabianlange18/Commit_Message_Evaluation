@@ -23,7 +23,7 @@ from util.tokenization import TokenizationWrapper, mean_pooling
 
 # Server GPU
 wandb.config = {
-  "model_name": 'TestData_StyleModel.pt',
+  "model_name": 'Authors_StyleModel.pt',
   "batch_size": 256,
   "learning_rate": 1e-4,
   "max_length": 25,
@@ -67,20 +67,20 @@ def load_data():
     # test = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
 
     # Test data run
-    train = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
-    validate = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
-    test = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
+    # train = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+    # validate = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+    # test = build_contrastive_pairs_data_dict('data/04-0c_Test_Set.pkl', cut_amount=647, subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
 
-    # if not wandb.config['projects']:
-    #     # 100 Authors (!set wandb config projects to false):
-    #     train = build_contrastive_pairs_data_dict('data/04-1a_Authors_Train_Set.pkl', subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
-    #     validate = build_contrastive_pairs_data_dict('data/04-1b_Authors_Validate_Set.pkl', subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
-    #     test = build_contrastive_pairs_data_dict('data/04-1c_Authors_Test_Set.pkl', subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
-    # else:
-    #     # 100 Projects (!set wandb config projects to true):
-    #     train = build_contrastive_pairs_data_dict('data/04-2a_Projects_Train_Set.pkl', subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
-    #     validate = build_contrastive_pairs_data_dict('data/04-2b_Projects_Validate_Set.pkl', subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
-    #     test = build_contrastive_pairs_data_dict('data/04-2c_Projects_Test_Set.pkl', subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
+    if not wandb.config['projects']:
+        # 100 Authors (!set wandb config projects to false):
+        train = build_contrastive_pairs_data_dict('data/04-1a_Authors_Train_Set.pkl', subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+        validate = build_contrastive_pairs_data_dict('data/04-1b_Authors_Validate_Set.pkl', subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+        test = build_contrastive_pairs_data_dict('data/04-1c_Authors_Test_Set.pkl', subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
+    else:
+        # 100 Projects (!set wandb config projects to true):
+        train = build_contrastive_pairs_data_dict('data/04-2a_Projects_Train_Set.pkl', subset_size=wandb.config['train_subset_size'], projects=wandb.config['projects'])
+        validate = build_contrastive_pairs_data_dict('data/04-2b_Projects_Validate_Set.pkl', subset_size=wandb.config['validate_subset_size'], projects=wandb.config['projects'])
+        test = build_contrastive_pairs_data_dict('data/04-2c_Projects_Test_Set.pkl', subset_size=wandb.config['test_subset_size'], projects=wandb.config['projects'])
 
     d = {
         'train': train,
