@@ -9,3 +9,7 @@ This can help with:
 
 - Evaluating the generation of commit messages
 - Improving the dataset creation by removing unfitting human commit messages.
+
+## Documentation
+
+Find the mid-term and final presentation in the doc folder. The full documentation is available on request.
