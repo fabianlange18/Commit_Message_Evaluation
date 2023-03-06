@@ -1,4 +1,4 @@
-# Commit_Message_Evaluation
+# Commit Message Evaluation
 
 
 ## Goal of the project
